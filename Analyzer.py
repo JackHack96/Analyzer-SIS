@@ -11,14 +11,14 @@ import sys
 import tarfile
 from glob import glob
 
-##
-## @file SIS analyzer
-## @author Adriano Tumminelli, Matteo Iervasi
-##
-## <!----------------------------------------------------------------------------------------------
-## @usage
-## python analyzer.py -d <PROJECTS_DIR> -inp <ABS_INPUT_PATH> -out <ABS_OUTPUT_PATH>
-## ----------------------------------------------------------------------------------------------->
+#
+# @file SIS analyzer
+# @author Adriano Tumminelli, Matteo Iervasi
+#
+# <!----------------------------------------------------------------------------------------------
+# @usage
+# python analyzer.py -d <PROJECTS_DIR> -inp <ABS_INPUT_PATH> -out <ABS_OUTPUT_PATH>
+# ----------------------------------------------------------------------------------------------->
 
 # ------------------------
 # Configuration
@@ -34,6 +34,7 @@ slackWeight = 0.1
 
 def subprocess_cmd(command):
     process = subprocess.Popen(command, stdout=subprocess.PIPE, shell=True)
+    # TODO: controllare 'ste due variabili
     stdout_data, stderr_data = process.communicate()
 
 
@@ -50,11 +51,11 @@ def file_exists_ci(directory, filename):
     return False
 
 
-def get_blif_directory(directory, subDir=False):
+def get_blif_directory(directory, sub_dir=False):
     for path in glob(directory + "/*"):
         base, fname = os.path.split(path)
         if file_exists_ci(directory, "fsmd.blif"):
-            if subDir:
+            if sub_dir:
                 return base, "<a class='info'> (sub-directory)</a>"
             else:
                 return base, ""
@@ -85,38 +86,34 @@ def check_students(files, extension, start_index):
 
     for f in files:
 
-        tarFileName = os.path.basename(f).split('.')[0]
-        print("\n-------------------------\n" + str(idx) + ") " + tarFileName + " \n-------------------------\n")
-        extractPath = './exams/' + tarFileName
-        # create a sub-directory for each student
-        if not os.path.exists(extractPath):
-            os.makedirs(extractPath)
+        tar_file_name = os.path.basename(f).split('.')[0]
+        print("\n-------------------------\n" + str(idx) + ") " + tar_file_name + " \n-------------------------\n")
+        extract_path = './exams/' + tar_file_name
 
-        fileExtension = '.'.join(os.path.basename(f).split('.')[1:])
-        groups = tarFileName.lstrip('sis_').split('_')
-        studentsList = []
-        groups = tarFileName.lstrip('sis_').split('_')
+        # create a sub-directory for each student
+        if not os.path.exists(extract_path):
+            os.makedirs(extract_path)
+        students_list = []
+        groups = tar_file_name.lstrip('sis_').split('_')
         while len(groups):
-            studentsList.append(' '.join(groups[:2]).title())
+            students_list.append(' '.join(groups[:2]).title())
             groups = groups[2:]
 
-        area = sys.maxint
-        slack = sys.maxint
+        area = sys.maxsize
+        slack = sys.maxsize
         status = ""
-        sim = ""
 
         if f.endswith(extension):
 
             match = 0
-            dirName = os.path.basename(f).split('.')[0]
             warning_extraction_text = "<a class='extract'> WARNING. An error occurred during file extraction.</a>"
 
             try:
                 tar = tarfile.open(f, "r")
-                tar.extractall(path=extractPath)
+                tar.extractall(path=extract_path)
                 tar.close()
             except:
-                command = "tar zxvf " + shellspace(f) + " -C " + shellspace(extractPath)
+                command = "tar zxvf " + shellspace(f) + " -C " + shellspace(extract_path)
                 try:
                     subprocess_cmd(command)
                 except:
@@ -124,25 +121,25 @@ def check_students(files, extension, start_index):
 
             if status == "":
 
-                blifRealDir, dirCheck = get_blif_directory(extractPath)
-                blifRealFilename, filenameCheck = get_fsmd_real_name(blifRealDir)
-                fsmdPath = blifRealDir + "/" + blifRealFilename
-                studentSimulationPath = blifRealDir + "/simulation_output.txt"
-                scriptPath = blifRealDir + "/script_exam.txt"
-                outExamPath = blifRealDir + "/out_exam.txt"
-                command = "cd " + shellspace(blifRealDir) + "/ && sis -t pla -f script_exam.txt \-x"
+                blif_real_dir, dir_check = get_blif_directory(extract_path)
+                blif_real_filename, filename_check = get_fsmd_real_name(blif_real_dir)
+                fsmd_path = blif_real_dir + "/" + blif_real_filename
+                student_simulation_path = blif_real_dir + "/simulation_output.txt"
+                script_path = blif_real_dir + "/script_exam.txt"
+                out_exam_path = blif_real_dir + "/out_exam.txt"
+                command = "cd " + shellspace(blif_real_dir) + "/ && sis -t pla -f script_exam.txt \-x"
 
                 # Checks if FSMD.blif exists
-                if os.path.exists(fsmdPath) and os.path.isfile(fsmdPath):
-                    with open(scriptPath, "w") as s:
-                        s.write(examScriptContent.format(blifRealFilename, inSimPath))
+                if os.path.exists(fsmd_path) and os.path.isfile(fsmd_path):
+                    with open(script_path, "w") as s:
+                        s.write(examScriptContent.format(blif_real_filename, inSimPath))
 
                     subprocess_cmd(command)
-                    if os.path.exists(outExamPath) and os.path.isfile(outExamPath):
+                    if os.path.exists(out_exam_path) and os.path.isfile(out_exam_path):
 
                         full_output = ""
                         i = 0
-                        with open(outExamPath, "r") as infile:
+                        with open(out_exam_path, "r") as infile:
                             for line in infile:
                                 # output
                                 if pattern.match(line):
@@ -162,11 +159,11 @@ def check_students(files, extension, start_index):
                                     slack = float(line.split('-', 1)[-1].strip())
 
                         # save output
-                        with open(studentSimulationPath, "w") as s:
+                        with open(student_simulation_path, "w") as s:
                             s.write(full_output)
 
                         if match == len(correct_outputs):
-                            status = "ok" + filenameCheck + dirCheck
+                            status = "ok" + filename_check + dir_check
                         else:
                             status = "<a class='warning'> Output did not match </a>"
 
@@ -177,7 +174,7 @@ def check_students(files, extension, start_index):
                     status = "<a class='folder'>WARNING. No FSMD.blif file found</a>"
         correctness = float(match) / len(correct_outputs) * 100.0
 
-        outputList.append([', '.join(studentsList), status, correctness, area, slack])
+        outputList.append([', '.join(students_list), status, correctness, area, slack])
         idx += 1
 
     return idx
@@ -193,8 +190,8 @@ if __name__ == '__main__':
 
     # Initializes an AgumentParser object
     commandLineArguments = argparse.ArgumentParser(description=
-                                                   "Analyzer for projects of the Computer Architecture \
-                                                   course at University of Verona")
+                                                   "Analyzer for projects of the Computer Architecture course at "
+                                                   "University of Verona")
 
     # Checks each command line argument:
     commandLineArguments.add_argument('-d',
@@ -248,7 +245,7 @@ if __name__ == '__main__':
             if line and pattern.match(line):
                 correct_outputs.append(line.lstrip('Outputs: ').replace(" ", "").strip())
 
-    examScriptContent = """
+    examScriptContent = """           
 set sisout out_exam.txt
 read_blif {}
 source {}
@@ -271,9 +268,9 @@ quit
 
     # sort by status, area and slack
     outputList.sort(key=lambda x:
-    (100 - x[2])
-    + x[3] / areaExpected * areaWeight
-    + x[4] / slackExpected * slackWeight)
+        (100 - x[2])
+        + x[3] / areaExpected * areaWeight
+        + x[4] / slackExpected * slackWeight)
     idx = 0
     evaluation = ""
     for s in outputList:
@@ -281,7 +278,7 @@ quit
         evaluation += "<tr><td>%d</td><td>%s</td>" % (idx, s[0])
         evaluation += "<td>%s</td><td>%.1f</td><td>%s</td><td>%s</td></tr>" % (s[1], s[2], s[3], s[4])
 
-    htmlTemplate=open("Template.html","r")
+    htmlTemplate = open("Template.html", "r")
     htmlContent = htmlTemplate.read() % evaluation
     with open('./exam_new.html', "w") as f:
         f.write(htmlContent)
