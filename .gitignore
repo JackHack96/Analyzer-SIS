@@ -103,3 +103,4 @@ ENV/
 exams/
 singolo/
 tests/
+.idea/
