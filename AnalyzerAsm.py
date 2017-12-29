@@ -6,6 +6,7 @@ from subprocess import Popen, PIPE, STDOUT, TimeoutExpired
 import time
 import os
 import tarfile
+import re
 
 __NR_FILE_NOT_FOUND = -1
 __NR_TIMEOUT = -2
@@ -70,3 +71,28 @@ def run_program(cmd, timeout, memory):
         proc.kill()  # we're no longer interested in the process, kill it
         ret = __NR_MAX_STDOUT_EXCEEDED
     return ret
+
+
+# Todo: check this function, we still don't know how to correctly compare ASM projects
+def compare(asm_simulation_output, asm_correct_outputs):
+    """
+    Compare the student's circuit output with the correct one
+    :param asm_simulation_output: File containing the simulated outputs
+    :param asm_correct_outputs: File containing the correct outputs
+    :return: Percentage of correctness
+    """
+    correct_outputs = list()
+    pattern = re.compile("^(Outputs:\s)?([0-1].+)$")
+    with open(asm_correct_outputs, "r") as infile:
+        for line in infile:
+            if pattern.match(line):
+                correct_outputs.append(line.lstrip("Outputs: ").replace(" ", "").strip())
+    match = 0
+    i = 0
+    with open(asm_simulation_output, "r") as infile:
+        for line in infile:
+            if pattern.match(line):
+                if line.lstrip("Outputs: ").replace(" ", "").strip() == correct_outputs[i]:
+                    match += 1
+                i += 1
+    return float(match) / float(i) * 100.0
