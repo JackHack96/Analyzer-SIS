@@ -10,6 +10,7 @@
 # @author Matteo Iervasi, Mirko Morati, Andrea Toaiari
 
 import AnalyzerSis
+import AnalyzerAsm
 import argparse
 import os
 import sys
@@ -42,11 +43,17 @@ if not os.path.exists(args.out) or not os.path.isfile(args.out):
     print("An error occurred. Please specify the path of the simulation output.")
     sys.exit(1)
 
-sis_simulation_input = str(os.path.abspath(args.inp))
-sis_correct_outputs = str(os.path.abspath(args.out))
+simulation_input = str(os.path.abspath(args.inp))
+correct_outputs = str(os.path.abspath(args.out))
+tar_directory = str(os.path.abspath(args.file))
 
-sis_tar_directory = AnalyzerSis.extract_archive(str(os.path.abspath(args.file)))
-if AnalyzerSis.simulate(sis_tar_directory, sis_simulation_input, sis_tar_directory + "/out_exam.txt"):
-    print(AnalyzerSis.compare(sis_tar_directory + "/out_exam.txt", sis_correct_outputs))
+if "sis" in tar_directory:
+    sis_tar_directory = AnalyzerSis.extract_archive(tar_directory)
+    if AnalyzerSis.simulate(sis_tar_directory, simulation_input, sis_tar_directory + "/out_exam.txt"):
+        print(AnalyzerSis.compare(sis_tar_directory + "/out_exam.txt", correct_outputs))
+    else:
+        print("Something went wrong during the simulation")
+elif "asm" in tar_directory:
+    asm_tar_directory = AnalyzerSis.extract_archive(tar_directory)
 else:
-    print("Something went wrong during the simulation")
+    print("Error! Project not identified!")

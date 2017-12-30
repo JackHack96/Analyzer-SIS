@@ -14,13 +14,13 @@ def extract_archive(sis_tarball):
     :param sis_tarball: The tarball file path
     :return: Extract directory path
     """
-    sis_tar_directory = sis_tarball.split('.')[0]
-    if not os.path.exists(sis_tar_directory):
-        os.makedirs(sis_tar_directory)
+    tar_directory = sis_tarball.split('.')[0]
+    if not os.path.exists(tar_directory):
+        os.makedirs(tar_directory)
     with tarfile.open(sis_tarball, "r") as tar:
-        tar.extractall(path=sis_tar_directory)
+        tar.extractall(path=tar_directory)
         tar.close()
-    return sis_tar_directory
+    return tar_directory
 
 
 def simulate(sis_tar_directory, sis_simulation_input, sis_simulation_output):

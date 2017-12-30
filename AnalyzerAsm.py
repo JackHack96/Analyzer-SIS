@@ -4,29 +4,12 @@ Functions for X86 assembly
 
 from subprocess import Popen, PIPE, STDOUT, TimeoutExpired
 import time
-import os
-import tarfile
 import re
 
 __NR_FILE_NOT_FOUND = -1
 __NR_TIMEOUT = -2
 __NR_MEMORY_OUT = -3
 __NR_MAX_STDOUT_EXCEEDED = -4
-
-
-def extract_archive(asm_tarball):
-    """
-    Extract archive in a sub-directory
-    :param asm_tarball: The tarball file path
-    :return: Extract directory path
-    """
-    asm_tar_directory = asm_tarball.split('.')[0]
-    if not os.path.exists(asm_tar_directory):
-        os.makedirs(asm_tar_directory)
-    with tarfile.open(asm_tarball, "r") as tar:
-        tar.extractall(path=asm_tar_directory)
-        tar.close()
-    return asm_tar_directory
 
 
 def limit_memory(memory):
