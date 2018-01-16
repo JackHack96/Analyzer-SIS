@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 ## @package Analyzer
 # Main package for Arkitest Analyzer
 #
@@ -35,13 +37,13 @@ args = parser.parse_args()
 
 if not os.path.exists(args.file) or not os.path.isfile(args.file):
     print("An error occurred. Please specify the path of the archive that contains the projects.")
-    sys.exit(1)
+    sys.exit(-1)
 if not os.path.exists(args.inp) or not os.path.isfile(args.inp):
     print("An error occurred. Please specify the path of the simulation input.")
-    sys.exit(1)
+    sys.exit(-1)
 if not os.path.exists(args.out) or not os.path.isfile(args.out):
     print("An error occurred. Please specify the path of the simulation output.")
-    sys.exit(1)
+    sys.exit(-1)
 
 simulation_input = str(os.path.abspath(args.inp))
 correct_outputs = str(os.path.abspath(args.out))
@@ -49,11 +51,23 @@ tar_directory = str(os.path.abspath(args.file))
 
 if "sis" in tar_directory:
     sis_tar_directory = AnalyzerSis.extract_archive(tar_directory)
-    if AnalyzerSis.simulate(sis_tar_directory, simulation_input, sis_tar_directory + "/out_exam.txt"):
-        print(AnalyzerSis.compare(sis_tar_directory + "/out_exam.txt", correct_outputs))
+    if sis_tar_directory != "":
+        if AnalyzerSis.simulate(sis_tar_directory, simulation_input, sis_tar_directory + "/out_exam.txt") == 0:
+            correctness = AnalyzerSis.compare(sis_tar_directory + "/out_exam.txt", correct_outputs)
+            if correctness > 0:
+                print(correctness)
+            else:
+                print("Error during correctness calculation")
+                sys.exit(-1)
+        else:
+            print("Something went wrong during the simulation")
+            sys.exit(-1)
     else:
-        print("Something went wrong during the simulation")
-elif "asm" in tar_directory:
+        print("Error during archive extraction")
+        sys.exit(-1)
+
+elif "asm" in tar_directory:  # TODO: da fare gestione assembly
     asm_tar_directory = AnalyzerSis.extract_archive(tar_directory)
+
 else:
     print("Error! Project not identified!")
