@@ -27,6 +27,15 @@ def extract_archive(sis_tarball):
     return tar_directory
 
 
+def check_extraction_directory(sis_tar_directory):
+    """
+    Check for FSMD.blif presence
+    :param sis_tar_directory: The directory containing the SIS files
+    :return: True if it exists, False otherwise
+    """
+    return os.path.exists(sis_tar_directory + "/FSMD.blif")
+
+
 def simulate(sis_tar_directory, sis_simulation_input, sis_simulation_output):
     """
     Simulate the circuit with SIS
@@ -35,24 +44,22 @@ def simulate(sis_tar_directory, sis_simulation_input, sis_simulation_output):
     :param sis_simulation_output: Path to save the outputs
     :return: 0 if everything is ok, otherwise -1
     """
-    if os.path.exists(sis_tar_directory + "/FSMD.blif"):
-        sis_command = "(cd " + sis_tar_directory + "; sis -t pla -f script_exam.txt \-x)"
-        sis_script = sis_tar_directory + "/script_exam.txt"
-        sis_simulation_script = "set sisout " + sis_simulation_output + "\n" + \
-                                "read_blif " + sis_tar_directory + "/FSMD.blif\n" + \
-                                "source " + sis_simulation_input + "\n" + \
-                                "read_library synch.genlib\n" + \
-                                "map -m 0 -W\n" + \
-                                "print_map_stats\n" + \
-                                "quit"
-        try:
-            with open(sis_script, "w") as s:
-                s.write(sis_simulation_script)
-            subprocess.Popen(sis_command, stdout=subprocess.PIPE, shell=True).communicate()  # Launch SIS subprocess
-        except IOError:
-            return -1
-        return 0
-    return -1
+    sis_command = "(cd " + sis_tar_directory + "; sis -t pla -f script_exam.txt \-x)"
+    sis_script = sis_tar_directory + "/script_exam.txt"
+    sis_simulation_script = "set sisout " + sis_simulation_output + "\n" + \
+                            "read_blif " + sis_tar_directory + "/FSMD.blif\n" + \
+                            "source " + sis_simulation_input + "\n" + \
+                            "read_library synch.genlib\n" + \
+                            "map -m 0 -W\n" + \
+                            "print_map_stats\n" + \
+                            "quit"
+    try:
+        with open(sis_script, "w") as s:
+            s.write(sis_simulation_script)
+        subprocess.Popen(sis_command, stdout=subprocess.PIPE, shell=True).communicate()  # Launch SIS subprocess
+    except IOError:
+        return -1
+    return 0
 
 
 def compare(sis_simulation_output, sis_correct_outputs):

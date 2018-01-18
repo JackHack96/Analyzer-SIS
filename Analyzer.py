@@ -16,6 +16,19 @@ import AnalyzerAsm
 import argparse
 import os
 import sys
+from enum import Enum
+
+
+class Error(Enum):
+    MISSING_PROJECT_ARCHIVE = -1
+    MISSING_CORRECT_INPUT = -2
+    MISSING_CORRECT_OUTPUT = -3
+    CORRECTNESS_CALCULATION_ERROR = -4
+    SIMULATION_ERROR = -5
+    MALFORMED_ARCHIVE = -6
+    UNIDENTIFIED_PROJECT_TYPE = -7
+    NOT_A_TARBALL = -8
+
 
 # Check and manage arguments
 parser = argparse.ArgumentParser(description="Analyzer for projects of the Computer Architecture course at "
@@ -37,37 +50,43 @@ args = parser.parse_args()
 
 if not os.path.exists(args.file) or not os.path.isfile(args.file):
     print("An error occurred. Please specify the path of the archive that contains the projects.")
-    sys.exit(-1)
+    sys.exit(Error.MISSING_PROJECT_ARCHIVE)
 if not os.path.exists(args.inp) or not os.path.isfile(args.inp):
     print("An error occurred. Please specify the path of the simulation input.")
-    sys.exit(-1)
+    sys.exit(Error.MISSING_CORRECT_INPUT)
 if not os.path.exists(args.out) or not os.path.isfile(args.out):
     print("An error occurred. Please specify the path of the simulation output.")
-    sys.exit(-1)
+    sys.exit(Error.MISSING_CORRECT_OUTPUT)
 
 simulation_input = str(os.path.abspath(args.inp))
 correct_outputs = str(os.path.abspath(args.out))
-tar_directory = str(os.path.abspath(args.file))
+tar_archive = str(os.path.abspath(args.file))
 
-if "sis" in tar_directory:
-    sis_tar_directory = AnalyzerSis.extract_archive(tar_directory)
-    if sis_tar_directory != "":
-        if AnalyzerSis.simulate(sis_tar_directory, simulation_input, sis_tar_directory + "/out_exam.txt") == 0:
-            correctness = AnalyzerSis.compare(sis_tar_directory + "/out_exam.txt", correct_outputs)
-            if correctness > 0:
-                print(correctness)
+if tar_archive.endswith(".tar.gz") or tar_archive.endswith(".tar.xz"):
+    if "sis" in tar_archive:
+        sis_tar_directory = AnalyzerSis.extract_archive(tar_archive)
+        if AnalyzerSis.check_extraction_directory(sis_tar_directory):
+            if AnalyzerSis.simulate(sis_tar_directory, simulation_input, sis_tar_directory + "/out_exam.txt") == 0:
+                correctness = AnalyzerSis.compare(sis_tar_directory + "/out_exam.txt", correct_outputs)
+                if correctness > 0:
+                    print(correctness)
+                    sys.exit(0)
+                else:
+                    print("Error during correctness calculation")
+                    sys.exit(Error.CORRECTNESS_CALCULATION_ERROR)
             else:
-                print("Error during correctness calculation")
-                sys.exit(-1)
+                print("Something went wrong during the simulation")
+                sys.exit(Error.SIMULATION_ERROR)
         else:
-            print("Something went wrong during the simulation")
-            sys.exit(-1)
+            print("The archive does not respect the correct structure")
+            sys.exit(Error.MALFORMED_ARCHIVE)
+
+    elif "asm" in tar_archive:  # TODO: da fare gestione assembly
+        asm_tar_directory = AnalyzerSis.extract_archive(tar_archive)
+
     else:
-        print("Error during archive extraction")
-        sys.exit(-1)
-
-elif "asm" in tar_directory:  # TODO: da fare gestione assembly
-    asm_tar_directory = AnalyzerSis.extract_archive(tar_directory)
-
+        print("Error! Project not identified!")
+        sys.exit(Error.UNIDENTIFIED_PROJECT_TYPE)
 else:
-    print("Error! Project not identified!")
+    print("The given archive is not a TAR archive")
+    sys.exit(Error.NOT_A_TARBALL)
