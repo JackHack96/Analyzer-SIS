@@ -67,7 +67,7 @@ def compare(sis_simulation_output, sis_correct_outputs):
     Compare the student's circuit output with the correct one
     :param sis_simulation_output: File containing the simulated outputs
     :param sis_correct_outputs: File containing the correct outputs
-    :return: Percentage of correctness, otherwise -1
+    :return: Tuple containing percentage of correctness and circuit area, otherwise -1
     """
     correct_outputs = list()
     pattern = re.compile("^(Outputs:\s)?([0-1].+)$")
@@ -78,12 +78,15 @@ def compare(sis_simulation_output, sis_correct_outputs):
                     correct_outputs.append(line.lstrip("Outputs: ").replace(" ", "").strip())
         match = 0
         i = 0
+        area = 0
         with open(sis_simulation_output, "r") as infile:
             for line in infile:
                 if pattern.match(line):
                     if line.lstrip("Outputs: ").replace(" ", "").strip() == correct_outputs[i]:
                         match += 1
                     i += 1
-        return float(match) / float(i) * 100.0
+                elif line.startswith("Total Area"):
+                    area = float(line.split('=', 1)[-1].strip())
+        return float(match) / float(i) * 100.0, area
     except IOError:
         return -1
