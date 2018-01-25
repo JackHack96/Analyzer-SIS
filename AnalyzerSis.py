@@ -14,7 +14,7 @@ def extract_archive(sis_tarball):
     :param sis_tarball: The tarball file path
     :return: Path of the directory
     """
-    tar_directory = sis_tarball.split('.')[0]
+    tar_directory = os.path.split(sis_tarball)[0]
     if not os.path.exists(tar_directory):
         os.makedirs(tar_directory)
 

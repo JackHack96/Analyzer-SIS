@@ -62,7 +62,7 @@ simulation_input = str(os.path.abspath(args.inp))
 correct_outputs = str(os.path.abspath(args.out))
 tar_archive = str(os.path.abspath(args.file))
 
-if tar_archive.endswith(".tar.gz") or tar_archive.endswith(".tar.xz"):
+if tar_archive.endswith(".tar.gz") or tar_archive.endswith(".tar.xz") or tar_archive.endswith(".tgz"):
     if "sis" in tar_archive:
         sis_tar_directory = AnalyzerSis.extract_archive(tar_archive)
         if AnalyzerSis.check_extraction_directory(sis_tar_directory):
