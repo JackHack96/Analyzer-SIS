@@ -88,7 +88,7 @@ def compare(sis_simulation_output, sis_correct_outputs):
                 elif line.startswith("Total Area"):
                     area = float(line.split('=', 1)[-1].strip())
                 elif line.startswith("Most Negative Slack"):
-                    slack = float(line.split('-', 1)[-1].strip())
+                    slack = -(float(line.split('-', 1)[-1].strip()))
         return float(match) / float(i) * 100.0, area, slack
     except IOError:
         return -1
