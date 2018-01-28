@@ -67,7 +67,7 @@ def compare(sis_simulation_output, sis_correct_outputs):
     Compare the student's circuit output with the correct one
     :param sis_simulation_output: File containing the simulated outputs
     :param sis_correct_outputs: File containing the correct outputs
-    :return: Tuple containing percentage of correctness, circuit area and slack, otherwise -1
+    :return: Tuple containing percentage of correctness, circuit area, most negative slack and total gates,otherwise -1
     """
     correct_outputs = list()
     pattern = re.compile("^(Outputs:\s)?([0-1].+)$")
@@ -79,6 +79,8 @@ def compare(sis_simulation_output, sis_correct_outputs):
         match = 0
         i = 0
         area = 0
+        slack = 0
+        gate_count = 0
         with open(sis_simulation_output, "r") as infile:
             for line in infile:
                 if pattern.match(line):
@@ -86,9 +88,11 @@ def compare(sis_simulation_output, sis_correct_outputs):
                         match += 1
                     i += 1
                 elif line.startswith("Total Area"):
-                    area = float(line.split('=', 1)[-1].strip())
+                    area = float(line.split('=')[1].strip())
                 elif line.startswith("Most Negative Slack"):
-                    slack = -(float(line.split('-', 1)[-1].strip()))
-        return float(match) / float(i) * 100.0, area, slack
+                    slack = -(float(line.split('-')[1].strip()))
+                elif line.startswith("Gate Count"):
+                    gate_count = int(line.split('=')[1].strip())
+        return float(match) / float(i) * 100.0, area, slack, gate_count
     except IOError:
         return -1

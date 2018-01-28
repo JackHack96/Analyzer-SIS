@@ -67,11 +67,13 @@ if tar_archive.endswith(".tar.gz") or tar_archive.endswith(".tar.xz") or tar_arc
         sis_tar_directory = AnalyzerSis.extract_archive(tar_archive)
         if AnalyzerSis.check_extraction_directory(sis_tar_directory):
             if AnalyzerSis.simulate(sis_tar_directory, simulation_input, sis_tar_directory + "/out_exam.txt") == 0:
-                correctness, area, slack = AnalyzerSis.compare(sis_tar_directory + "/out_exam.txt", correct_outputs)
+                correctness, area, slack, total_gate = AnalyzerSis.compare(sis_tar_directory + "/out_exam.txt",
+                                                                           correct_outputs)
                 if correctness > 0:
                     print(correctness)
                     print(area)
                     print(slack)
+                    print(total_gate)
                     sys.exit(0)
                 else:
                     print("Error during correctness calculation")
